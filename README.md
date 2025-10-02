@@ -1,2 +1,2 @@
-# Information Management Project
+# 📖 Information Management Project
 INST326 Project
