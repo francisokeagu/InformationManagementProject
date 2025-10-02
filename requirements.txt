@@ -17,4 +17,4 @@ checkout_book(user_id, book_id, catalog, users) – updates user record & catalo
 return_book(user_id, book_id, catalog, users) – handles book return and calculates late fees.
 search_books(query, books_list) – supports searching by title, author, or ISBN.
 generate_monthly_report(catalog, users) – shows stats (e.g., most borrowed, overdue counts).
-import_books_from_csv(filename, catalog) – reads CSV, validates rows, and adds to catalog.
+import_books_from_csv(filename, catalog) – reads CSV, validates rows, and adds to catalog. 
