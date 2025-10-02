@@ -1,1 +1,20 @@
-require
+validate_isbn(isbn) – checks if ISBN is valid length & format.
+format_book_title(title) – trims whitespace, capitalizes words.
+normalize_author_name(name) – formats names like “Last, First”.
+is_valid_email(email) – basic check for “@” and “.” in email.
+calculate_late_fee(days_late, rate) – returns overdue fee.
+is_available(book_id) – checks if book is currently borrowed.
+get_due_date(checkout_date, loan_period) – adds days to date.
+format_date(date_obj) – outputs dates in a standard format.
+generate_user_id(name) – makes a simple ID (e.g., initials + random number).
+count_books(catalog) – returns total number of books.
+find_book_by_id(book_id, catalog) – returns book object if found.
+print_book_info(book) – nicely displays book details.
+check_password_strength(password) – checks length + characters.
+clean_input(text) – trims spaces and removes extra characters.
+add_new_book(book_data, catalog) – validates & inserts book.
+checkout_book(user_id, book_id, catalog, users) – updates user record & catalog status.
+return_book(user_id, book_id, catalog, users) – handles book return and calculates late fees.
+search_books(query, books_list) – supports searching by title, author, or ISBN.
+generate_monthly_report(catalog, users) – shows stats (e.g., most borrowed, overdue counts).
+import_books_from_csv(filename, catalog) – reads CSV, validates rows, and adds to catalog.
