@@ -1,3 +1,5 @@
+THE LAST 6 FUNCTIONS ARE REQUIRED BC THEY FUFILL OUR COMPLEX AND MEDIUM FUNCTION COMPLEXITY !!!!!!!!!!!!
+
 validate_isbn(isbn) – checks if ISBN is valid length & format.
 format_book_title(title) – trims whitespace, capitalizes words.
 normalize_author_name(name) – formats names like “Last, First”.
@@ -18,3 +20,5 @@ return_book(user_id, book_id, catalog, users) – handles book return and calcul
 search_books(query, books_list) – supports searching by title, author, or ISBN.
 generate_monthly_report(catalog, users) – shows stats (e.g., most borrowed, overdue counts).
 import_books_from_csv(filename, catalog) – reads CSV, validates rows, and adds to catalog. 
+
+
