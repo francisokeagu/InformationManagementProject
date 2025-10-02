@@ -1,0 +1,2 @@
+# InformationManagementProjectCharter
+INST326 Project
