@@ -1,0 +1,12 @@
+""" Test Example """
+
+
+# Sample data 
+
+user_id,title,author,isbn,checkout_date,return_date,is_returned
+U001,The Pragmatic Programmer,Andrew Hunt,9780201616224,2025-09-15,2025-09-29,TRUE
+U002,Clean Code,Robert C. Martin,9780132350884,2025-09-20,2025-10-05,TRUE
+U003,Python Crash Course,Eric Matthes,9781593279288,2025-09-25,,FALSE
+U001,Automate the Boring Stuff,Al Sweigart,9781593275990,2025-09-27,,FALSE
+U004,Introduction to Algorithms,Cormen et al.,9780262033848,2025-09-10,2025-09-25,TRUE
+U005,Deep Learning with Python,François Chollet,9781617294433,2025-09-22,,FALSE
