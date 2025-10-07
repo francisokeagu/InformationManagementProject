@@ -1,4 +1,6 @@
-THE LAST 6 FUNCTIONS ARE REQUIRED BC THEY FUFILL OUR COMPLEX AND MEDIUM FUNCTION COMPLEXITY !!!!!!!!!!!!
+""" 
+THE LAST 6 FUNCTIONS ARE REQUIRED BC THEY FUFILL OUR COMPLEX AND MEDIUM FUNCTION COMPLEXITY !!!!!!!!!!!! 
+"""
 
 -----------------Easy--------------------
 validate_isbn(isbn) – checks if ISBN is valid length & format.
