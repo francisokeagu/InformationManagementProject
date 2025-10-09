@@ -72,4 +72,84 @@ def validate_input(data):
         return False
 
     logging.info("Data validation passed.")
+
     return True
+
+
+
+def add_new_book(book_data, catalog):
+    """
+    Validates and inserts a new book into the catalog.
+
+    Args:
+        book_data (dict): Dictionary containing book information.
+        catalog (list): List of existing book dictionaries.
+
+    Returns:
+        list: Updated catalog list.
+    """
+    required_fields = ["title", "author", "isbn"]
+
+    # Check required fields
+    for field in required_fields:
+        if field not in book_data or not book_data[field]:
+            print(f"Missing required field: {field}")
+            return catalog
+
+    # Prevent duplicate ISBNs
+    for book in catalog:
+        if book["isbn"] == book_data["isbn"]:
+            print(f"Book with ISBN {book_data['isbn']} already exists.")
+            return catalog
+
+    # Validate ISBN (basic)
+    if not (len(book_data["isbn"]) in [10, 13] and book_data["isbn"].isdigit()):
+        print(f"Invalid ISBN format: {book_data['isbn']}")
+        return catalog
+
+    # Add to catalog
+    catalog.append(book_data)
+    print(f"Added new book: {book_data['title']}")
+    return catalog
+
+
+
+
+
+
+""""""""""""""""" COMPLEX """""""""""""""
+def search_books(query, books_list):
+    """
+    Search for books in the catalog by title, author, or ISBN.
+
+    Args:
+        query (str): Search keyword (case-insensitive).
+        books_list (list): List of book dictionaries.
+
+    Returns:
+        list: Matching books, or an empty list if none found.
+    """
+    if not query or not isinstance(query, str):
+        print("Invalid search query.")
+        return []
+
+    query = query.lower().strip()
+    results = []
+
+    for book in books_list:
+        # Ensure keys exist and convert to lowercase strings
+        title = str(book.get("title", "")).lower()
+        author = str(book.get("author", "")).lower()
+        isbn = str(book.get("isbn", "")).lower()
+
+        if query in title or query in author or query in isbn:
+            results.append(book)
+
+    if results:
+        print(f"Found {len(results)} result(s) for '{query}':")
+    else:
+        print(f"No books found for '{query}'.")
+
+    return results
+
+
