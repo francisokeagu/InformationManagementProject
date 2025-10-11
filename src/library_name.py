@@ -154,34 +154,78 @@ def search_books(query, books_list):
     return results
 
 
-#generate monthly income
+# generate monthly report
 from datetime import datetime
 from collections import Counter, defaultdict
 
 def generate_monthly_report(catalog, users):
+    """
+    Generate a monthly report of borrowing activity, top books, and user engagement.
+
+    Args:
+        catalog (list): List of book dictionaries, each with a 'borrow_history' list.
+        users (list): List of user dictionaries with 'id' and 'name' fields.
+
+    Returns:
+        dict: Summary of monthly activity.
+    """
     now = datetime.now()
     borrowed = Counter()
     activity = defaultdict(int)
     overdue = []
 
+    # Iterate over all books and their borrow history
     for book in catalog:
         for rec in book.get('borrow_history', []):
-            bd, dd, rd, uid = rec['borrow_date'], rec['due_date'], rec['return_date'], rec['user_id']
-            if bd.month == now.month and bd.year == now.year:
-                borrowed[book['title']] += 1
-                activity[uid] += 1
-            if not rd and dd < now:
-                overdue.append(book['title'])
+            bd = rec.get('borrow_date')
+            dd = rec.get('due_date')
+            rd = rec.get('return_date')
+            uid = rec.get('user_id')
 
-    name_map = {u['id']: u['name'] for u in users}
-    active = [name_map[i] for i in activity]
-    inactive = [name_map[u['id']] for u in users if u['id'] not in activity]
+            # Convert to datetime if given as string
+            if isinstance(bd, str):
+                bd = datetime.fromisoformat(bd)
+            if isinstance(dd, str):
+                dd = datetime.fromisoformat(dd)
+            if isinstance(rd, str) and rd:
+                rd = datetime.fromisoformat(rd)
 
-    print("\n=== Monthly Report ===")
-    print(f"Total Books: {len(catalog)}")
-    print(f"Total Users: {len(users)}")
-    print(f"Borrowed This Month: {sum(borrowed.values())}")
-    print("Top Borrowed:", borrowed.most_common(5))
-    print("Overdue Books:", list(set(overdue)))
-    print("Active Users:", active)
-    print("Inactive Users:", inactive)
+            # Count only if borrowed this month
+            if bd and bd.month == now.month and bd.year == now.year:
+                borrowed[book.get('title', 'Unknown Title')] += 1
+                if uid:
+                    activity[uid] += 1
+
+            # Track overdue (not returned and due date has passed)
+            if not rd and dd and dd < now:
+                overdue.append(book.get('title', 'Unknown Title'))
+
+    # Map user IDs to names
+    name_map = {u.get('id'): u.get('name') for u in users}
+    active = [name_map.get(i, f"User {i}") for i in activity]
+    inactive = [name_map.get(u.get('id')) for u in users if u.get('id') not in activity]
+
+    # Build report data
+    report = {
+        "month": now.strftime("%B %Y"),
+        "total_books": len(catalog),
+        "total_users": len(users),
+        "borrowed_this_month": sum(borrowed.values()),
+        "top_borrowed": borrowed.most_common(5),
+        "overdue_books": list(set(overdue)),
+        "active_users": active,
+        "inactive_users": inactive
+    }
+
+    # Print summary
+    print(f"\n=== Monthly Report: {report['month']} ===")
+    print(f"Total Books: {report['total_books']}")
+    print(f"Total Users: {report['total_users']}")
+    print(f"Borrowed This Month: {report['borrowed_this_month']}")
+    print("Top Borrowed:", report['top_borrowed'])
+    print("Overdue Books:", report['overdue_books'])
+    print("Active Users:", report['active_users'])
+    print("Inactive Users:", report['inactive_users'])
+
+    return report
+
