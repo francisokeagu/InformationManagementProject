@@ -293,182 +293,97 @@ def remove_book(book_id, catalog, permanent=False):
 
 """"""""""""""""" COMPLEX """""""""""""""
 
-# Search book(s)
-def search_books(query, books_list):
-    """
-    Search for books in the catalog by title, author, or ISBN.
+#search books
+from typing import List, Dict, Any, Optional, Tuple
+import unicodedata
+import difflib
 
-    Args:
-        query (str): Search keyword (case-insensitive).
-        books_list (list): List of book dictionaries.
+def _normalize_text(s: str) -> str:
+    if s is None:
+        return ""
+    s = str(s).strip().lower()
+    # remove diacritics: “François” -> “francois”
+    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
+
+def _tokenize(s: str) -> List[str]:
+    return [t for t in _normalize_text(s).replace("-", " ").replace("/", " ").split() if t]
+
+def search_books(
+    query: str,
+    books_list: List[Dict[str, Any]],
+    *,
+    fields: Tuple[str, ...] = ("title", "author", "isbn"),
+    fuzzy: bool = True,
+    min_ratio: float = 0.65,     # 0..1 similarity threshold when fuzzy=True
+    limit: Optional[int] = 25,   # max results
+    page: int = 1,               # 1-based page index
+    page_size: Optional[int] = None  # overrides 'limit' with paged results if set
+) -> Dict[str, Any]:
+    """
+    Weighted, robust search across title/author/ISBN with optional fuzzy matching.
 
     Returns:
-        list: Matching books, or an empty list if none found.
+        {
+          "total": int,
+          "results": [book, ...],
+          "page": int,
+          "page_size": Optional[int]
+        }
     """
-    if not query or not isinstance(query, str):
-        print("Invalid search query.")
-        return []
+    if not isinstance(query, str) or not query.strip():
+        return {"total": 0, "results": [], "page": 1, "page_size": page_size}
 
-    query = query.lower().strip()
-    results = []
+    qnorm = _normalize_text(query)
+    qtokens = set(_tokenize(query))
+
+    # Weights: tune to preference
+    weights = {"title": 1.0, "author": 0.7, "isbn": 0.9}
+
+    scored: List[Tuple[float, Dict[str, Any]]] = []
 
     for book in books_list:
-        # Ensure keys exist and convert to lowercase strings
-        title = str(book.get("title", "")).lower()
-        author = str(book.get("author", "")).lower()
-        isbn = str(book.get("isbn", "")).lower()
+        score = 0.0
+        for f in fields:
+            val = _normalize_text(book.get(f, ""))
+            if not val:
+                continue
 
-        if query in title or query in author or query in isbn:
-            results.append(book)
+            # Exact/substring boost
+            if qnorm in val:
+                score += weights.get(f, 0.5) * (1.0 if val == qnorm else 0.85)
 
-    if results:
-        print(f"Found {len(results)} result(s) for '{query}':")
-    else:
-        print(f"No books found for '{query}'.")
+            # Token overlap boost (partial word hits)
+            if qtokens:
+                tokens = set(_tokenize(val))
+                overlap = len(qtokens & tokens)
+                if overlap:
+                    score += weights.get(f, 0.5) * min(0.75, 0.15 * overlap)
 
-    return results
+            # Fuzzy matching (title/author mostly)
+            if fuzzy and f in ("title", "author"):
+                ratio = difflib.SequenceMatcher(None, qnorm, val).ratio()
+                if ratio >= min_ratio:
+                    # taper influence so near-perfect matches bubble up
+                    score += weights.get(f, 0.5) * (ratio ** 2)
 
+        if score > 0:
+            scored.append((score, book))
 
-# generate monthly report
-from datetime import datetime
-from collections import Counter, defaultdict
+    # sort by score desc, then title asc to stabilize order
+    scored.sort(key=lambda x: (-x[0], _normalize_text(x[1].get("title", ""))))
+    all_results = [b for _, b in scored]
 
-def generate_monthly_report(catalog, users):
-    """
-    Generate a monthly report of borrowing activity, top books, and user engagement.
+    # Pagination logic
+    if page_size is not None and page_size > 0:
+        start = (max(page, 1) - 1) * page_size
+        end = start + page_size
+        page_results = all_results[start:end]
+        return {"total": len(all_results), "results": page_results, "page": max(page, 1), "page_size": page_size}
 
-    Args:
-        catalog (list): List of book dictionaries, each with a 'borrow_history' list.
-        users (list): List of user dictionaries with 'id' and 'name' fields.
+    # Legacy limit behavior
+    if limit is not None and limit > 0:
+        all_results = all_results[:limit]
 
-    Returns:
-        dict: Summary of monthly activity.
-    """
-    now = datetime.now()
-    borrowed = Counter()
-    activity = defaultdict(int)
-    overdue = []
-
-    # Iterate over all books and their borrow history
-    for book in catalog:
-        for rec in book.get('borrow_history', []):
-            bd = rec.get('borrow_date')
-            dd = rec.get('due_date')
-            rd = rec.get('return_date')
-            uid = rec.get('user_id')
-
-            # Convert to datetime if given as string
-            if isinstance(bd, str):
-                bd = datetime.fromisoformat(bd)
-            if isinstance(dd, str):
-                dd = datetime.fromisoformat(dd)
-            if isinstance(rd, str) and rd:
-                rd = datetime.fromisoformat(rd)
-
-            # Count only if borrowed this month
-            if bd and bd.month == now.month and bd.year == now.year:
-                borrowed[book.get('title', 'Unknown Title')] += 1
-                if uid:
-                    activity[uid] += 1
-
-            # Track overdue (not returned and due date has passed)
-            if not rd and dd and dd < now:
-                overdue.append(book.get('title', 'Unknown Title'))
-
-    # Map user IDs to names
-    name_map = {u.get('id'): u.get('name') for u in users}
-    active = [name_map.get(i, f"User {i}") for i in activity]
-    inactive = [name_map.get(u.get('id')) for u in users if u.get('id') not in activity]
-
-    # Build report data
-    report = {
-        "month": now.strftime("%B %Y"),
-        "total_books": len(catalog),
-        "total_users": len(users),
-        "borrowed_this_month": sum(borrowed.values()),
-        "top_borrowed": borrowed.most_common(5),
-        "overdue_books": list(set(overdue)),
-        "active_users": active,
-        "inactive_users": inactive
-    }
-
-    # Print summary
-    print(f"\n=== Monthly Report: {report['month']} ===")
-    print(f"Total Books: {report['total_books']}")
-    print(f"Total Users: {report['total_users']}")
-    print(f"Borrowed This Month: {report['borrowed_this_month']}")
-    print("Top Borrowed:", report['top_borrowed'])
-    print("Overdue Books:", report['overdue_books'])
-    print("Active Users:", report['active_users'])
-    print("Inactive Users:", report['inactive_users'])
-
-    return report
-
-# import_books_from_csv function
-import csv
-from src.utils import validate_isbn, clean_input, format_book_title, normalize_author_name
-
-def import_books_from_csv(filename, catalog):
-    """
-    Reads book records from a CSV file and adds valid entries to the catalog.
-
-    Args:
-        filename (str): Path to the CSV file.
-        catalog (list): List of existing book dictionaries.
-
-    Returns:
-        tuple: (updated_catalog, summary_report)
-    """
-    added = 0
-    skipped = 0
-
-    try:
-        with open(filename, mode="r", encoding="utf-8") as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                title = clean_input(row.get("title", ""))
-                author = normalize_author_name(row.get("author", ""))
-                isbn = clean_input(row.get("isbn", ""))
-                year = row.get("year")
-                available = str(row.get("available", "True")).lower() in ("true", "1", "yes")
-
-                # Validate required fields
-                if not title or not author or not isbn:
-                    skipped += 1
-                    continue
-
-                # Check for duplicates by ISBN
-                if any(b["isbn"] == isbn for b in catalog):
-                    skipped += 1
-                    continue
-
-                # Validate ISBN format
-                if not validate_isbn(isbn):
-                    skipped += 1
-                    continue
-
-                # Add new book entry
-                new_book = {
-                    "id": len(catalog) + 1,
-                    "title": format_book_title(title),
-                    "author": author,
-                    "isbn": isbn,
-                    "year": int(year) if year and year.isdigit() else None,
-                    "available": available,
-                    "borrow_history": []
-                }
-                catalog.append(new_book)
-                added += 1
-
-    except FileNotFoundError:
-        print(f"File not found: {filename}")
-        return catalog, {"added": added, "skipped": skipped, "error": "File not found"}
-
-    except Exception as e:
-        print(f"Error reading file: {e}")
-        return catalog, {"added": added, "skipped": skipped, "error": str(e)}
-
-    print(f"Import complete — {added} added, {skipped} skipped.")
-    return catalog, {"added": added, "skipped": skipped, "error": None}
+    return {"total": len(scored), "results": all_results, "page": 1, "page_size": None}
 
 
