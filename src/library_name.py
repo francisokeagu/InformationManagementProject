@@ -18,14 +18,6 @@ def setup_logger(logfile="app.log"):
     logging.info("Logger initialized successfully.")
 
 
-
-
-def generate_dashboard(data_source):
-    """Integrate analytics and visualizations (placeholder for dashboard code)."""
-    logging.info("Dashboard generation not yet implemented.")
-    pass
-
-
 """""""""""""""""MEDIUM"""""""""""""""
 def create_report(data):
     """Generate a simple analytics summary for the dataset."""
@@ -41,6 +33,7 @@ def create_report(data):
 
     logging.info("Report created successfully.")
     return summary
+
 
 
 
