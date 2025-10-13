@@ -224,13 +224,13 @@ def return_book(user_id, book_id, catalog, users, daily_rate=0.25):
     # 2. Find book
     book = next((b for b in catalog if b.get("id") == book_id), None)
     if not book:
-        return False, f"❌ Book ID '{book_id}' not found.", 0.0
+        return False, f"Book ID '{book_id}' not found.", 0.0
 
     # 3. Check if user actually borrowed this book
     borrowed_books = user.get("borrowed_books", [])
     record = next((r for r in borrowed_books if r["book_id"] == book_id), None)
     if not record:
-        return False, f"⚠️ Book ID '{book_id}' is not borrowed by user '{user_id}'.", 0.0
+        return False, f"Book ID '{book_id}' is not borrowed by user '{user_id}'.", 0.0
 
     # 4. Calculate late fee
     due_date = record["due_date"]
@@ -270,16 +270,16 @@ def remove_book(book_id, catalog, permanent=False):
     Returns:
         tuple: (success: bool, message: str)
     """
-    # 1️⃣ Find book by ID
+    # Find book by ID
     book = next((b for b in catalog if b.get("id") == book_id), None)
     if not book:
         return False, f"Book ID '{book_id}' not found."
 
-    # 2️⃣ Prevent removing a borrowed book
+    # Prevent removing a borrowed book
     if not book.get("available", True):
         return False, f"Cannot remove '{book['title']}' because it is currently borrowed."
 
-    # 3️⃣ Handle permanent or soft deletion
+    # Handle permanent or soft deletion
     if permanent:
         catalog.remove(book)
         return True, f"Book '{book['title']}' permanently removed from catalog."
@@ -470,4 +470,5 @@ def import_books_from_csv(filename, catalog):
 
     print(f"Import complete — {added} added, {skipped} skipped.")
     return catalog, {"added": added, "skipped": skipped, "error": None}
+
 
