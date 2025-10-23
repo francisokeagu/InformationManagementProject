@@ -1,7 +1,7 @@
 """ Main Function Library """
 
 
-# src/library_name.py
+# src/main_function_library_.py
 import pandas as pd
 import logging
 import os
@@ -385,5 +385,6 @@ def search_books(
         all_results = all_results[:limit]
 
     return {"total": len(scored), "results": all_results, "page": 1, "page_size": None}
+
 
 
