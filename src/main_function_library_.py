@@ -46,7 +46,7 @@ def is_available(book_id, catalog):
     for book in catalog:
         if book.get("id") == book_id:
             return book.get("available", False)
-    return FalseI 
+    return False 
 
 
 
