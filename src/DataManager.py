@@ -6,8 +6,6 @@ class DataManager:
     """
     Manages data loading and catalog maintenance for the library system.
 
-    This class interacts with the Catalog and LibraryItem classes to load data, create reports, and manage items.
-
     Methods
     -------
     load_library_data(source)
