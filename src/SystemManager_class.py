@@ -1,6 +1,6 @@
 class SystemManager:
 
-def __init__(self, logfile="app.log"):
+    def __init__(self, logfile="app.log"):
       """
       Initialize the SystemManager.
 
@@ -12,7 +12,7 @@ def __init__(self, logfile="app.log"):
       self.setup_logger()
 
 
-def setup_logger(logfile="app.log"):
+    def setup_logger(logfile="app.log"):
     """Configure and initialize logging for the application."""
     logging.basicConfig(
         filename=logfile,
@@ -22,7 +22,7 @@ def setup_logger(logfile="app.log"):
     logging.info("Logger initialized successfully.")
 
 
-def validate_input(data):
+    def validate_input(data):
     """Ensure dataset structure and required columns are valid."""
     if data is None or data.empty:
         logging.error("Validation failed: Data is empty.")
