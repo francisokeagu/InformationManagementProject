@@ -1,0 +1,12 @@
+# Ignore Kaggle API key
+.kaggle/
+kaggle.json
+
+# Ignore full dataset
+data/*.zip
+data/*.csv
+!data/sample_books.csv   # allow one small file for testing
+
+# Ignore Python cache
+__pycache__/
+*.pyc
